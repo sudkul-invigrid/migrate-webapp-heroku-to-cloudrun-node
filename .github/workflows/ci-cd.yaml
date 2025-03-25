@@ -17,7 +17,7 @@ env:
   WORKER_IMAGE: workers
 
 jobs:
-  build and deploy:
+  build-and-deploy:
     runs on: ubuntu-latest
     permissions:
       id-token: write
