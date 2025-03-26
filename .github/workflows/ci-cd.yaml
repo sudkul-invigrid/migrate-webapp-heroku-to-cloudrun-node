@@ -50,15 +50,15 @@ jobs:
       - name: Check cloud run existence
         id: check-run
         run: |
-          if gcloud run services decribe $CLOUD_RUN --region=$REGION --platform=managed; then
-            echo "exists=true" >> $GITHUB_output
+          if gcloud run services describe $CLOUD_RUN --region=$REGION --platform=managed; then
+            echo "exists=true" >> $GITHUB_OUTPUT
           else
             echo "exists=false" >> $GITHUB_OUTPUT
           fi
 
       - name: Deploy APP to cloud run
         if: steps.check-run.outputs.exists == 'true'
-        run:
+        run: |
           gcloud run deploy $APP_IMAGE \
             --image=$REGION-docker.pkg.dev/$PROJECT_ID/$REPO/$APP_IMAGE \
             --region=$REGION \
