@@ -30,7 +30,6 @@ jobs:
       - name: Authenticate to Google Cloud with WIF
         uses: google-github-actions/auth@v1
         with:
-          token_format: 'access token'
           workload_identity_provider: ${{env.WIF_PROVIDER}}
           service_account: ${{env.SERVICE_ACCOUNT}}
 
