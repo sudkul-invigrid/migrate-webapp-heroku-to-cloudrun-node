@@ -8,7 +8,7 @@ on:
 env:
   PROJECT_ID: provarity-dev-test
   REGION: us-central1
-  REPO: mohaninvigrid/migrate-webapp-heroku-to-cloudrun-node
+  REPO: prov-ar-dev-212-artifactregistry-1
   ARTIFACT_DOMAIN: us-central1-docker.pkg.dev
   SERVICE_ACCOUNT: github-action-dev@provarity-devtest.iam.gserviceaccount.com
   WIF_PROVIDER: /projects/471809734182/locations/global/workloadIdentityPools/github-identity-pool/providers/github-actions-provider
