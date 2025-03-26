@@ -38,7 +38,12 @@ jobs:
     
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker $ARTIFACT_DOMAIN
-
+        
+      - name: Debug cloud auth
+        run: |
+          gcloud auth list
+          gcloud config list
+          
       - name: Build and Push container images from docker-compose (overwrrite latest)
         run: |
           docker build -t $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/$APP_IMAGE . --build-arg CMD="npm start"
