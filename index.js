@@ -40,12 +40,19 @@ const PORT = process.env.PORT || 8080;
  * database and then starts the express server
  */
 const run = async () => {
-  await client.connect();
-
-  app.listen(PORT, () => {
-    console.log(`Server Started on PORT ${PORT}`);
-  });
-}
+  try{
+    if(!process.env.DATABASE_URL) {
+      console.warn('DATABASE_URL is not set. Skipping DB connection.');
+    } else {
+      await client.connect();
+    app.listen(PORT, () => {
+      console.log(`Server Started on PORT ${PORT}`);
+    });
+  } catch (err) {
+    console.error('Startup failed:', err);
+    process.exit(1);
+  }
+};
 
 /**
  * Route that is invoked when the user visits the app. Renders the index
