@@ -75,7 +75,7 @@ jobs:
             --image=$REGION-docker.pkg.dev/$PROJECT_ID/$REPO/$APP_IMAGE \
             --region=$REGION \
             --platform=managed \
-            --set-env-vars="NODE_ENV=production \
+            --set-env-vars="NODE_ENV=production" \
             --allow-unauthenticated \
             --quiet
 
@@ -86,7 +86,7 @@ jobs:
             --image=$REGION-docker.pkg.dev/$PROJECT_ID/$REPO/$WORKER_IMAGE \
             --region=$REGION \
             --platform=managed \
-            --set-env-vars="NODE_ENV=production \
+            --set-env-vars="NODE_ENV=production" \
             --allow-unauthenticated \
             --quiet
 
