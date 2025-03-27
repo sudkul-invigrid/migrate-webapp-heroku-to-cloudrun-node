@@ -6,12 +6,10 @@ on:
       - gcp-devtest
 
 env:
-  PROJECT_ID: provarity-dev-test
+  PROJECT_ID: provarity-devtest
   REGION: us-central1
   REPO: prov-ar-dev-212-artifactregistry-1
   ARTIFACT_DOMAIN: us-central1-docker.pkg.dev
-  SERVICE_ACCOUNT: github-action-dev@provarity-devtest.iam.gserviceaccount.com
-  WIF_PROVIDER: projects/471809734182/locations/global/workloadIdentityPools/github-identity-pool/providers/github-actions-provider
   CLOUD_RUN: run4-dev-220-cloudrun-1
   APP_IMAGE: app
   WORKER_IMAGE: workers
@@ -36,11 +34,14 @@ jobs:
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker $ARTIFACT_DOMAIN
         
-      - name: Debug cloud auth
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+        
+      - name: Print active service account
         run: |
+          echo "Authenticated account:"
           gcloud auth list
-          gcloud config list
-      
+
       - name: Print authenticated service account
         run: |
           echo "Authenticated account:"
@@ -48,7 +49,7 @@ jobs:
           echo ""
           echo "Service account email from access token"
           ACCESS_TOKEN=$(gcloud auth print-access-token)
-          curl -s https://oauth2.googleapis.com/tokeninfo?access_token=$ACCESS_TOKEN | jq.
+          curl -s https://oauth2.googleapis.com/tokeninfo?access_token=$ACCESS_TOKEN | jq .
                 
       - name: Build and Push container images from docker-compose (overwrite latest)
         run: |
@@ -80,7 +81,7 @@ jobs:
 
       - name: Deploy Workers to cloud run
         if: steps.check-run.outputs.exists == 'true'
-        run:
+        run: |
           gcloud run deploy $WORKER_IMAGE \
             --image=$REGION-docker.pkg.dev/$PROJECT_ID/$REPO/$WORKER_IMAGE \
             --region=$REGION \
