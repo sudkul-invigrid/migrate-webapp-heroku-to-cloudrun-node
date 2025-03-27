@@ -40,7 +40,15 @@ jobs:
         run: |
           gcloud auth list
           gcloud config list
-          
+      
+      - name: Print identity info (debug)
+        run: |
+          echo "Authenticated account:"
+          gcloud auth list
+          echo ""
+          echo "Token info:"
+          gcloud auth print-access-token | gcloud auth token info --
+                
       - name: Build and Push container images from docker-compose (overwrite latest)
         run: |
           docker build -t $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/$APP_IMAGE . --build-arg CMD="npm start"
