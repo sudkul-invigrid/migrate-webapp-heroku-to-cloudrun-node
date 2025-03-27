@@ -75,11 +75,9 @@ app.get('/', async (req, res) => {
  * @param {object} res The HTTP response object
  */
 app.post('/task', async (req, res) => {
-  let taskDescription = req.body.task;
+  const taskDescription = req.body.task;
   try {
-    await client.query(
-      `INSERT INTO tasks (DESCRIPTION) VALUES ('${taskDescription}')`);
-    res.redirect('/');
+    await client.query(`INSERT INTO tasks (DESCRIPTION) VALUES ($1)' [taskDescription]);
     console.log(`Added task "${taskDescription}" to database`);
   } catch(e) {
     console.error(e);
