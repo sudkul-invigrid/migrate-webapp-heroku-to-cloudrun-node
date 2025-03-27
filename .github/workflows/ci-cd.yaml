@@ -36,9 +36,8 @@ jobs:
       - name: Set up gcloud CLI
         uses: google-github-actions/setup-gcloud@v1
     
-      - name: Manually login to Artifact Registry via access token
-        run: |
-          gcloud auth print-access-token | docker login -u oauth2accesstoken --password-stdin https://us-central1-docker.pg.dev
+      - name: Configure Docker for Artifact Registry
+        run: gcloud auth configure-docker $ARTIFACT_DOMAIN
         
       - name: Debug cloud auth
         run: |
