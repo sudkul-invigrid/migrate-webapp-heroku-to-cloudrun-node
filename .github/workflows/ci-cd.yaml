@@ -43,9 +43,11 @@ jobs:
           
       - name: Build and Push container images from docker-compose (overwrite latest)
         run: |
-          docker-compose build
+          docker build -t $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/$APP_IMAGE . --build-arg CMD="npm start"
+          docker build -t $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/$WORKER_IMAGE . --build-arg CMD="node all-workers.js"
           
-          docker-compose push
+          docker push $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/$APP_IMAGE
+          docker push $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/$WORKER_IMAGE
           
       - name: Check cloud run existence
         id: check-run
