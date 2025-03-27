@@ -25,16 +25,14 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Authenticate to Google Cloud with WIF
         uses: google-github-actions/auth@v2
         with:
+          token_format: 'access token'
           workload_identity_provider: ${{env.WIF_PROVIDER}}
           service_account: ${{env.SERVICE_ACCOUNT}}
-
-      - name: Set up gcloud CLI
-        uses: google-github-actions/setup-gcloud@v1
     
       - name: Configure Docker for Artifact Registry
         run: gcloud auth configure-docker $ARTIFACT_DOMAIN
@@ -46,11 +44,9 @@ jobs:
           
       - name: Build and Push container images from docker-compose (overwrite latest)
         run: |
-          docker build -t $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/$APP_IMAGE . --build-arg CMD="npm start"
-          docker build -t $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/$WORKER_IMAGE . --build-arg CMD="node all-workers.js"
+          docker-compose build
           
-          docker push $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/$APP_IMAGE
-          docker push $REGION-docker.pkg.dev/$PROJECT_ID/$REPO/$WORKER_IMAGE
+          docker-compose push
           
       - name: Check cloud run existence
         id: check-run
