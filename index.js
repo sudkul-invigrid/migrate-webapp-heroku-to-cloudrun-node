@@ -1,23 +1,7 @@
-/*
- * Copyright 2019 Google LLC
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *     https://www.apache.org/licenses/LICENSE-2.0
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
-
 const express = require('express');
 const bodyParser = require('body-parser');
 const mustacheExpress = require('mustache-express');
 const { Client } = require('pg');
-
-// This library allows the program to work both on Heroku and on Cloud Run
-// (via Unix sockets)
 const { parse } = require('pg-connection-string');
 
 const app = express();
@@ -27,64 +11,67 @@ app.engine('html', mustacheExpress());
 app.set('view engine', 'html');
 app.set('views', __dirname + '/views');
 
-config = parse(process.env.DATABASE_URL);
-// Check if database running in Heroku (AWS) or Cloud Run. 
-// Heroku and Cloud Run handle SSL traffic differently
-if (config.host.includes("amazonaws.com")) {
-  config.ssl = { rejectUnauthorized: false };
-}
-const client = new Client(config);
+let client = null;
+let dbReady = false;
 const PORT = process.env.PORT || 8080;
-/**
- * Run is the starting point for our application. It first connects to the
- * database and then starts the express server
- */
+
 const run = async () => {
-  await client.connect();
+  try {
+    const dbUrl = process.env.DATABASE_URL;
+    if (dbUrl) {
+      const config = parse(dbUrl);
 
-  app.listen(PORT, () => {
-    console.log(`Server Started on PORT ${PORT}`);
-  });
-}
+      if (config.host.includes("amazonaws.com")) {
+        config.ssl = { rejectUnauthorized: false };
+      }
 
-/**
- * Route that is invoked when the user visits the app. Renders the index
- * route using mustache
- *
- * @param {object} req The request payload
- * @param {object} res The HTTP response object
- */
+      client = new Client(config);
+      await client.connect();
+      dbReady = true;
+      console.log('✅ Connected to the database.');
+    } else {
+      console.warn('⚠️ DATABASE_URL is not set. Running without database.');
+    }
+
+    app.listen(PORT, () => {
+      console.log('🚀 Server started on PORT ${PORT}');
+    });
+  } catch (err) {
+    console.error('❌ Startup failed:', err);
+    process.exit(1);
+  }
+};
+
+// Health check route
+app.get('/healthz', (req, res) => res.status(200).send('OK'));
+
+// Root route
 app.get('/', async (req, res) => {
+  if (!dbReady) return res.status(503).send('Database not connected.');
   try {
     const result = await client.query('SELECT DESCRIPTION FROM TASKS');
-    let alltasks = {
-      tasks: result.rows
-    };
+    const alltasks = { tasks: result.rows };
     res.render('main', alltasks);
-    console.log(`Displaying ${alltasks.tasks.length} tasks.`)
-  } catch(e) {
-    console.error(e);
-    res.status(500).end(e.toString());
+    console.log('📋 Displaying ${alltasks.tasks.length} tasks.');
+  } catch (e) {
+    console.error('❌ Error in GET /:', e);
+    res.status(500).send('Internal server error');
   }
-})
+});
 
-/**
- * Route that called to create a new task in the database
- *
- * @param {object} req The request payload
- * @param {object} res The HTTP response object
- */
+// Add task route
 app.post('/task', async (req, res) => {
-  let taskDescription = req.body.task;
+  if (!dbReady) return res.status(503).send('Database not connected.');
+
+  const taskDescription = req.body.task;
   try {
-    await client.query(
-      `INSERT INTO tasks (DESCRIPTION) VALUES ('${taskDescription}')`);
+    await client.query('INSERT INTO tasks (DESCRIPTION) VALUES ($1)', [taskDescription]);
+    console.log('➕ Added task "${taskDescription}"');
     res.redirect('/');
-    console.log(`Added task "${taskDescription}" to database`);
-  } catch(e) {
-    console.error(e);
+  } catch (e) {
+    console.error('❌ Error adding task:', e);
     res.sendStatus(500);
   }
-})
+});
 
 run();
